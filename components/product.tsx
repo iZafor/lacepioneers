@@ -10,7 +10,6 @@ import {
 } from "./ui/card";
 import { Button } from "./ui/button";
 import { useState } from "react";
-import { ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import { Doc } from "@/convex/_generated/dataModel";
@@ -20,6 +19,8 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "./ui/tooltip";
+import { Input } from "./ui/input";
+import { SquareArrowOutUpRight } from "lucide-react";
 
 export default function Product({
     product,
@@ -28,45 +29,77 @@ export default function Product({
     product: Doc<"shoes">;
     className?: string;
 }) {
-    const [size, setSize] = useState<number | null>(0);
+    const [size, setSize] = useState<number | null>(null);
+    const [quantity, setQuantity] = useState(1);
     const isAvailable = product.sizes.some((s) => s.stock > 0);
 
     return (
-        <div
+        <Card
             className={cn(
-                "relative w-[24rem] h-[23rem] overflow-hidden flex flex-col items-center justify-center group",
+                "relative w-[20rem] h-[20rem] overflow-hidden flex flex-col items-center justify-center group cursor-pointer",
                 className
             )}
         >
-            <ExternalLink className="absolute right-[10%] top-0 group-hover:opacity-100 opacity-0" />
-            <Image
-                className="transition-all duration-500 ease-in-out group-hover:scale-[1.35] group-hover:rotate-3 cursor-pointer"
-                width={200}
-                height={200}
-                src={
-                    "/images/" + product.name.split(" ").join("_") + "_base.png"
-                }
-                alt={product.alt}
-            />
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button
+                            size="icon"
+                            variant="outline"
+                            className="absolute right-2 top-2"
+                            onClick={() => {
+                                console.log("clicked");
+                            }}
+                        >
+                            <SquareArrowOutUpRight />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>View product details</TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+            <CardHeader className="w-full">
+                <CardTitle>
+                    <h4 className="text-amber-500 text-sm">{product.brand}</h4>
+                    <h3>{product.name}</h3>
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                <Image
+                    className="transition-all duration-500 ease-in-out group-hover:scale-[1.35] group-hover:rotate-3"
+                    width={200}
+                    height={200}
+                    src={
+                        "/images/" +
+                        product.name.split(" ").join("_") +
+                        "_base.png"
+                    }
+                    alt={product.name}
+                />
+            </CardContent>
             <Card
                 className={cn(
-                    "w-4/5 translate-y-[-3rem] gap-2",
+                    "w-[90%] translate-y-[5rem] gap-2",
                     "transition-transform duration-300 ease-in-out",
-                    "group-hover:translate-y-[-2.5rem]",
+                    "group-hover:translate-y-[2rem]",
                     "z-10",
-                    "bg-gradient-to-br from-violet-500 via-fuchsia-400 to-amber-300",
-                    "border-2 border-slate-900"
+                    "border-none",
+                    "absolute",
+                    "opacity-0 group-hover:opacity-85"
                 )}
             >
-                <CardHeader>
-                    <CardTitle className="text-center font-bold text-white">
-                        {product.name}
-                    </CardTitle>
-                </CardHeader>
                 <CardContent className="space-y-2">
-                    <p className="text-center font-mono text-white">
-                        ${product.price}
-                    </p>
+                    <div className="w-full flex justify-center gap-2 text-center font-mono">
+                        <p
+                            className={cn({
+                                "line-through": product.discountPrice != null,
+                            })}
+                        >
+                            ${product.price}
+                        </p>
+                        {product.discountPrice != null && (
+                            <p>${product.discountPrice}</p>
+                        )}
+                    </div>
                     <div className="flex items-center justify-between flex-wrap gap-2">
                         {product.sizes.map((s) => (
                             <TooltipProvider
@@ -90,32 +123,42 @@ export default function Product({
                                             {s.size}
                                         </Button>
                                     </TooltipTrigger>
-                                    <TooltipContent className="bg-gradient-to-br from-violet-500 via-fuchsia-400 to-amber-300 border-2 border-slate-900">
-                                        <p className="font-mono text-white">
-                                            Just {s.stock} pairs remaining
-                                        </p>
+                                    <TooltipContent>
+                                        Just {s.stock} pairs remaining
                                     </TooltipContent>
                                 </Tooltip>
                             </TooltipProvider>
                         ))}
+                        <Input
+                            disabled={!isAvailable || size === null}
+                            value={quantity}
+                            onChange={(e) => {
+                                const value = Number(e.target.value);
+                                if (isNaN(value) || value < 0) {
+                                    setQuantity(0);
+                                } else {
+                                    setQuantity(value);
+                                }
+                            }}
+                            placeholder="Quantity"
+                            type="number"
+                            min={0}
+                        />
                     </div>
                 </CardContent>
                 <CardFooter className="flex flex-col gap-2">
                     <Button
-                        className="w-full bg-amber-500 hover:bg-amber-600 text-white border-2 border-slate-900"
+                        className="w-full border-2 bg-amber-500 hover:bg-amber-600 text-white border-slate-900"
+                        disabled={!isAvailable}
                         variant="secondary"
-                        disabled={!isAvailable}
-                    >
-                        Add to cart
-                    </Button>
-                    <Button
-                        className="w-full border-2 border-slate-900 bg-white text-slate-900 hover:bg-slate-100"
-                        disabled={!isAvailable}
                     >
                         Buy Now
                     </Button>
+                    <Button className="w-full border-2" disabled={!isAvailable}>
+                        Add to cart
+                    </Button>
                 </CardFooter>
             </Card>
-        </div>
+        </Card>
     );
 }
