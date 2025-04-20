@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { stream } from "convex-helpers/server/stream";
 import schema from "./schema";
 import { Id } from "./_generated/dataModel";
+import { paginationOptsValidator } from "convex/server";
 
 const field = v.union(
     v.literal("_id"),
@@ -66,6 +67,13 @@ export const getShoesBy = query({
     },
 });
 
+export const getShoesPaginated = query({
+    args: { paginationOpts: paginationOptsValidator },
+    handler: (ctx, { paginationOpts }) => {
+        return ctx.db.query("shoes").paginate(paginationOpts);
+    },
+});
+
 type FieldValue = {
     field: (typeof field)["type"][number];
     value: string | number | Array<{ size: number; stock: number }> | undefined;
@@ -105,3 +113,4 @@ export const generateUploadUrl = mutation({
         return await ctx.storage.generateUploadUrl();
     },
 });
+

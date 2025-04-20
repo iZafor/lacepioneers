@@ -9,6 +9,7 @@ import {
     getCoreRowModel,
     getSortedRowModel,
     getFilteredRowModel,
+    getPaginationRowModel,
     useReactTable,
 } from "@tanstack/react-table";
 
@@ -21,6 +22,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import React, { ComponentType, useState } from "react";
+import { Button } from "./ui/button";
 
 interface TableFilterProps<TData> {
     table: TableType<TData>;
@@ -30,12 +32,22 @@ interface TableFilterProps<TData> {
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
+    pagination?: { pageIndex: number; pageSize: number };
+    onPrevPage?: () => void;
+    canPrevPage?: () => boolean;
+    onNextPage?: () => void;
+    canNextPage?: () => boolean;
     tableFilter?: ComponentType<TableFilterProps<TData>>;
 }
 
 export default function DataTable<TData, TValue>({
     columns,
     data,
+    pagination,
+    onPrevPage,
+    canPrevPage,
+    onNextPage,
+    canNextPage,
     tableFilter: TableFilter,
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = useState<SortingState>([]);
@@ -49,9 +61,11 @@ export default function DataTable<TData, TValue>({
         getSortedRowModel: getSortedRowModel(),
         onColumnFiltersChange: setColumnFilters,
         getFilteredRowModel: getFilteredRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
         state: {
             sorting,
             columnFilters,
+            pagination,
         },
     });
 
@@ -114,6 +128,27 @@ export default function DataTable<TData, TValue>({
                     </TableBody>
                 </Table>
             </div>
+
+            {pagination && (
+                <div className="flex items-center justify-end space-x-2 pb-4">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={onPrevPage}
+                        disabled={!canPrevPage!()}
+                    >
+                        Previous
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={onNextPage}
+                        disabled={!canNextPage!()}
+                    >
+                        Next
+                    </Button>
+                </div>
+            )}
         </div>
     );
 }
