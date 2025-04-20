@@ -20,6 +20,7 @@ import {
     TooltipTrigger,
 } from "./ui/tooltip";
 import { Input } from "./ui/input";
+import LoadingSpinner from "@/components/ui/loading-spinner";
 import { SquareArrowOutUpRight } from "lucide-react";
 
 export default function Product({
@@ -31,6 +32,7 @@ export default function Product({
 }) {
     const [size, setSize] = useState<number | null>(null);
     const [quantity, setQuantity] = useState(1);
+    const [isLoading, setIsLoading] = useState(true);
     const isAvailable = product.sizes.some((s) => s.stock > 0);
 
     return (
@@ -59,22 +61,22 @@ export default function Product({
             </TooltipProvider>
             <CardHeader className="w-full">
                 <CardTitle>
-                    <h4 className="text-amber-500 text-sm">{product.brand}</h4>
+                    <h4 className="text-prime text-sm">{product.brand}</h4>
                     <h3>{product.name}</h3>
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <Image
-                    className="transition-all duration-500 ease-in-out group-hover:scale-[1.35] group-hover:rotate-3"
-                    width={200}
-                    height={200}
-                    src={
-                        "/images/" +
-                        product.name.split(" ").join("_") +
-                        "_base.png"
-                    }
-                    alt={product.name}
-                />
+                <div className="size-[200px] relative">
+                    {isLoading && <LoadingSpinner />}
+                    <Image
+                        className="transition-all duration-500 ease-in-out group-hover:scale-[1.35]"
+                        width={200}
+                        height={200}
+                        src={product.defaultImage}
+                        alt={product.name}
+                        onLoadingComplete={() => setIsLoading(false)}
+                    />
+                </div>
             </CardContent>
             <Card
                 className={cn(
@@ -84,21 +86,24 @@ export default function Product({
                     "z-10",
                     "border-none",
                     "absolute",
-                    "opacity-0 group-hover:opacity-85"
+                    "bg-transparent hidden group-hover:block"
                 )}
             >
                 <CardContent className="space-y-2">
                     <div className="w-full flex justify-center gap-2 text-center font-mono">
                         <p
                             className={cn({
-                                "line-through": product.discountPrice != null,
+                                "line-through":
+                                    product.discountPrice != null &&
+                                    product.discountPrice > 0,
                             })}
                         >
                             ${product.price}
                         </p>
-                        {product.discountPrice != null && (
-                            <p>${product.discountPrice}</p>
-                        )}
+                        {product.discountPrice != null &&
+                            product.discountPrice > 0 && (
+                                <p>${product.discountPrice}</p>
+                            )}
                     </div>
                     <div className="flex items-center justify-between flex-wrap gap-2">
                         {product.sizes.map((s) => (
@@ -113,8 +118,10 @@ export default function Product({
                                             className={cn(
                                                 "rounded-full focus:outline-none border-2 border-slate-900 bg-white dark:bg-slate-800",
                                                 {
-                                                    "bg-amber-500 dark:bg-amber-500 text-white ring-2 ring-offset-2 ring-amber-600":
+                                                    "bg-prime text-white ring-2 ring-offset-2 ring-prime":
                                                         size === s.size,
+                                                    "diagonal-line-through":
+                                                        s.stock === 0,
                                                 }
                                             )}
                                             size="icon"
@@ -130,6 +137,7 @@ export default function Product({
                             </TooltipProvider>
                         ))}
                         <Input
+                            className="border-2 border-accent-foreground mb-2"
                             disabled={!isAvailable || size === null}
                             value={quantity}
                             onChange={(e) => {
@@ -148,7 +156,7 @@ export default function Product({
                 </CardContent>
                 <CardFooter className="flex flex-col gap-2">
                     <Button
-                        className="w-full border-2 bg-amber-500 hover:bg-amber-600 text-white border-slate-900"
+                        className="w-full border-2 bg-prime hover:bg-amber-600 text-white border-slate-900"
                         disabled={!isAvailable}
                         variant="secondary"
                     >

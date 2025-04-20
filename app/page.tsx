@@ -1,13 +1,26 @@
 "use client";
 
+import { useQuery } from "convex/react";
+import { api } from "../convex/_generated/api";
+
 import ProductCategory from "@/components/product-category";
 import ThemeSwitcher from "@/components/theme-switcher";
 
 export default function Home() {
+    const categories = useQuery(api.shoes.getShoesBy, {
+        distinct: "category",
+        select: ["category"],
+    })?.map((o) => o["category"]) as string[];
+
     return (
-        <div className="px-10 mt-10">
+        <div className="px-10 mt-10 mb-4">
             <ThemeSwitcher className="absolute top-5 right-5" />
-            <ProductCategory category="Sneakers" />
+            <div className="space-y-6">
+                {categories &&
+                    categories.map((cat) => (
+                        <ProductCategory key={cat} category={cat} />
+                    ))}
+            </div>
         </div>
     );
 }
