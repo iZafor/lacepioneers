@@ -33,7 +33,7 @@ interface TableFilterProps<TData> {
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
-    pagination?: { pageIndex: number; pageSize: number };
+    paginationDefault?: { pageIndex: number; pageSize: number };
     onPrevPage?: () => void;
     canPrevPage?: () => boolean;
     onNextPage?: () => void;
@@ -44,15 +44,12 @@ interface DataTableProps<TData, TValue> {
 export default function DataTable<TData, TValue>({
     columns,
     data,
-    pagination,
-    onPrevPage,
-    canPrevPage,
-    onNextPage,
-    canNextPage,
+    paginationDefault,
     tableFilter: TableFilter,
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+    const [pagination, setPagination] = useState(paginationDefault);
 
     const table = useReactTable({
         data: data || [],
@@ -66,7 +63,7 @@ export default function DataTable<TData, TValue>({
         state: {
             sorting,
             columnFilters,
-            pagination,
+            pagination: pagination,
         },
     });
 
@@ -135,16 +132,30 @@ export default function DataTable<TData, TValue>({
                     <Button
                         variant="outline"
                         size="sm"
-                        onClick={onPrevPage}
-                        disabled={!canPrevPage!()}
+                        onClick={() => {
+                            if (table.getCanPreviousPage()) {
+                                setPagination({
+                                    ...pagination,
+                                    pageIndex: pagination.pageIndex - 1,
+                                });
+                            }
+                        }}
+                        disabled={!table.getCanPreviousPage()}
                     >
                         Previous
                     </Button>
                     <Button
                         variant="outline"
                         size="sm"
-                        onClick={onNextPage}
-                        disabled={!canNextPage!()}
+                        onClick={() => {
+                            if (table.getCanNextPage()) {
+                                setPagination({
+                                    ...pagination,
+                                    pageIndex: pagination.pageIndex + 1,
+                                });
+                            }
+                        }}
+                        disabled={!table.getCanNextPage()}
                     >
                         Next
                     </Button>
