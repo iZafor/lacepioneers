@@ -25,6 +25,7 @@ import React, { ComponentType, useState } from "react";
 import { Button } from "./ui/button";
 
 interface TableFilterProps<TData> {
+    data: TData[];
     table: TableType<TData>;
     classname?: string;
 }
@@ -71,7 +72,7 @@ export default function DataTable<TData, TValue>({
 
     return (
         <div className="space-y-4">
-            {TableFilter && <TableFilter table={table} />}
+            {TableFilter && <TableFilter data={data} table={table} />}
             <div className="rounded-md border">
                 <Table>
                     <TableHeader>

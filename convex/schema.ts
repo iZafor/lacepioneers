@@ -9,7 +9,7 @@ export default defineSchema({
         discountPrice: v.optional(v.number()),
         defaultImage: v.string(),
         imageId: v.id("_storage"),
-        brand: v.optional(v.string()),
+        brand: v.string(),
         description: v.string(),
         category: v.string(),
     })

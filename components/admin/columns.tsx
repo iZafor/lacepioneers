@@ -52,10 +52,12 @@ export const columns: ColumnDef<Doc<"shoes">>[] = [
     {
         accessorKey: "category",
         header: "Category",
+        filterFn: (row, id, value) => value.includes(row.getValue(id)),
     },
     {
         accessorKey: "brand",
         header: "Brand",
+        filterFn: (row, id, value) => value.includes(row.getValue(id)),
     },
     {
         id: "actions",
