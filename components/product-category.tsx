@@ -19,7 +19,7 @@ export default function ProductCategory({
 }) {
     const products = useQuery(api.shoes.getShoesBy, {
         field: "category",
-        value: category,
+        values: [category],
         take: 10,
     }) as Doc<"shoes">[];
 

@@ -18,7 +18,7 @@ export default function ProductCategoryPage({
 }: ProductCategoryPageProps) {
     const products = useQuery(api.shoes.getShoesBy, {
         field: "category",
-        value: category,
+        values: [category],
     }) as Doc<"shoes">[];
 
     if (!products) {
@@ -31,7 +31,9 @@ export default function ProductCategoryPage({
 
     return (
         <div className={cn("w-full space-y-4", className)}>
-            <h3 className="text-2xl font-semibold capitalize text-prime">{category}</h3>
+            <h3 className="text-2xl font-semibold capitalize text-prime">
+                {category}
+            </h3>
             <div className="grid grid-cols-4 gap-x-4 gap-y-6">
                 {products?.map((shoe) => (
                     <Product className="w-full" key={shoe._id} product={shoe} />

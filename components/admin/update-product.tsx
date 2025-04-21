@@ -59,7 +59,7 @@ export default function UpdateProduct({
 }) {
     const productArray = useQuery(api.shoes.getShoesBy, {
         field: "_id",
-        value: productId,
+        values: [productId],
     }) as Doc<"shoes">[] | undefined;
     const product = productArray?.at(0);
 
@@ -231,7 +231,7 @@ export default function UpdateProduct({
                                             : product.defaultImage
                                     }
                                     alt={product.name}
-                                    onLoadingComplete={() =>
+                                    onLoad={() =>
                                         setIsLoading(false)
                                     }
                                 />
