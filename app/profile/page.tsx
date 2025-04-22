@@ -3,6 +3,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 import {
     Card,
@@ -27,19 +30,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-
-const DUMMY_USER = {
-    id: "dummy-id",
-    name: "John Doe",
-    email: "john@example.com",
-    phone: "+1 234 567 8900",
-    address: "123 Main St",
-    city: "New York",
-    state: "NY",
-    zipCode: "10001",
-    imageUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=John",
-    firstName: "John",
-};
+import { useEffect, useState } from "react";
 
 const DUMMY_ORDERS = [
     {
@@ -59,39 +50,98 @@ const DUMMY_ORDERS = [
 ];
 
 const profileSchema = z.object({
-    name: z.string().min(2, "Name must be at least 2 characters"),
-    email: z.string().email("Invalid email address"),
     phone: z.string().optional(),
-    address: z.string().min(5, "Address is required"),
-    city: z.string().min(2, "City is required"),
-    state: z.string().min(2, "State is required"),
-    zipCode: z.string().min(5, "ZIP code is required"),
+    address: z.string().optional(),
+    city: z.string().optional(),
+    state: z.string().optional(),
+    zipCode: z.string().optional(),
 });
 
+const TAB_VALUES = ["profile", "orders", "settings"] as const;
+type TabValue = (typeof TAB_VALUES)[number];
+
 export default function ProfilePage() {
-    const user = DUMMY_USER;
-    const userData = DUMMY_USER;
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+
+    const initialTab = searchParams.get("tab");
+    const validatedTab: TabValue = TAB_VALUES.includes(initialTab as TabValue)
+        ? (initialTab as TabValue)
+        : "profile";
+
+    const [tabValue, setTabValue] = useState<TabValue>(validatedTab);
+
+    const handleTabChange = (value: string) => {
+        const newTab = TAB_VALUES.includes(value as TabValue)
+            ? value
+            : "profile";
+
+        const params = new URLSearchParams(searchParams);
+        params.set("tab", newTab);
+
+        router.push(`${pathname}?${params.toString()}`);
+        setTabValue(newTab as TabValue);
+    };
+
+    const userData = useQuery(api.users.getUser);
+    const updateUser = useMutation(api.users.updateUser);
+
+    const [isUpdating, setIsUpdating] = useState(false);
 
     const form = useForm<z.infer<typeof profileSchema>>({
         resolver: zodResolver(profileSchema),
         defaultValues: {
-            name: userData.name,
-            email: userData.email,
-            phone: userData.phone,
-            address: userData.address,
-            city: userData.city,
-            state: userData.state,
-            zipCode: userData.zipCode,
+            phone: userData?.phone || "",
+            address: userData?.address || "",
+            city: userData?.city || "",
+            state: userData?.state || "",
+            zipCode: userData?.zipCode || "",
         },
     });
 
+    useEffect(() => {
+        if (userData) {
+            form.reset({
+                phone: userData?.phone || "",
+                address: userData?.address || "",
+                city: userData?.city || "",
+                state: userData?.state || "",
+                zipCode: userData?.zipCode || "",
+            });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [userData]);
+
     async function onSubmit(values: z.infer<typeof profileSchema>) {
-        console.log("Form submitted with values:", values);
+        setIsUpdating(true);
+
+        const updates: { field: string; value: string }[] = [];
+        (Object.keys(values) as Array<keyof typeof values>).forEach((field) => {
+            if (values[field] && values[field] !== userData![field]) {
+                updates.push({ field, value: values[field] });
+            }
+        });
+
+        if (updates.length > 0) {
+            await updateUser({ id: userData!._id, values: updates });
+        }
+        form.reset();
+
+        setIsUpdating(false);
+    }
+
+    if (!userData) {
+        return <ProfileSkeleton />;
     }
 
     return (
         <div className="container mx-auto py-4 sm:py-8 px-4 max-w-5xl">
-            <Tabs defaultValue="profile" className="space-y-4 sm:space-y-6">
+            <Tabs
+                value={tabValue}
+                onValueChange={handleTabChange}
+                className="space-y-4 sm:space-y-6"
+            >
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-0 sm:justify-between">
                     <TabsList className="w-full sm:w-auto">
                         <TabsTrigger value="profile">Profile</TabsTrigger>
@@ -99,9 +149,9 @@ export default function ProfilePage() {
                         <TabsTrigger value="settings">Settings</TabsTrigger>
                     </TabsList>
                     <Avatar className="h-12 w-12 self-center sm:self-auto">
-                        <AvatarImage src={user?.imageUrl} />
+                        <AvatarImage src={userData.profileImage} />
                         <AvatarFallback>
-                            {user?.firstName?.charAt(0)}
+                            {userData.name.charAt(0)}
                         </AvatarFallback>
                     </Avatar>
                 </div>
@@ -115,45 +165,27 @@ export default function ProfilePage() {
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
+                            <div className="mb-6 space-y-4">
+                                <div className="space-y-2">
+                                    <p className="text-sm font-medium text-muted-foreground">
+                                        Full Name
+                                    </p>
+                                    <p className="text-sm">{userData.name}</p>
+                                </div>
+                                <div className="space-y-2">
+                                    <p className="text-sm font-medium text-muted-foreground">
+                                        Email
+                                    </p>
+                                    <p className="text-sm">{userData.email}</p>
+                                </div>
+                            </div>
+                            <Separator className="mb-6" />
+
                             <Form {...form}>
                                 <form
                                     onSubmit={form.handleSubmit(onSubmit)}
                                     className="space-y-4"
                                 >
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <FormField
-                                            control={form.control}
-                                            name="name"
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>
-                                                        Full Name
-                                                    </FormLabel>
-                                                    <FormControl>
-                                                        <Input {...field} />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                        <FormField
-                                            control={form.control}
-                                            name="email"
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>Email</FormLabel>
-                                                    <FormControl>
-                                                        <Input
-                                                            {...field}
-                                                            type="email"
-                                                        />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                    </div>
-
                                     <FormField
                                         control={form.control}
                                         name="phone"
@@ -249,6 +281,7 @@ export default function ProfilePage() {
                                         <Button
                                             type="submit"
                                             className="w-full sm:w-auto"
+                                            disabled={isUpdating}
                                         >
                                             Save Changes
                                         </Button>
