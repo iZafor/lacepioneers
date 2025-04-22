@@ -19,15 +19,12 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 
 export default function Cart({ className }: { className?: string }) {
     const pathname = usePathname();
     const isAdmin = pathname.toLowerCase().includes("admin");
-    const {
-        products: cartProducts,
-        updateCart,
-        setCount,
-    } = useCart((state) => state);
+    const { products: cartProducts, updateCart, setCount } = useCart();
     const products = useQuery(api.shoes.getShoesBy, {
         field: "_id",
         values: cartProducts.map((p) => p.productId),
@@ -187,7 +184,11 @@ export default function Cart({ className }: { className?: string }) {
                                     ${totalPrice?.toFixed(2)}
                                 </span>
                             </div>
-                            <Button className="w-full">Checkout</Button>
+                            <Button className="w-full">
+                                <Link className="w-full" href="/checkout">
+                                    Checkout
+                                </Link>
+                            </Button>
                         </motion.div>
                     </div>
                 )}
