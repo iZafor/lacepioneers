@@ -43,7 +43,7 @@ export default function Cart({ className }: { className?: string }) {
         <Popover>
             <PopoverTrigger asChild>
                 <Button
-                    variant="outline"
+                    variant="ghost"
                     size="icon"
                     className={cn("relative", className)}
                 >

@@ -18,7 +18,7 @@ export default defineSchema({
 
     users: defineTable({
         name: v.string(),
-        role: v.string(),
+        role: v.union(v.literal("user"), v.literal("admin")),
         email: v.string(),
         phone: v.optional(v.string()),
         address: v.optional(v.string()),
@@ -27,6 +27,7 @@ export default defineSchema({
         zipCode: v.optional(v.string()),
         profileImage: v.optional(v.string()),
         profileImageId: v.optional(v.id("_storage")),
+        clerkUserId: v.string()
     })
         .index("by_name", ["name"])
         .index("by_role", ["role"])

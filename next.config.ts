@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
     images: {
         remotePatterns: [
             new URL("https://pleasant-okapi-183.convex.cloud/api/storage/**"),
+            new URL("https://img.clerk.com/**"),
         ],
     },
 };
