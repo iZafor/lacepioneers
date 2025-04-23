@@ -16,6 +16,12 @@ import { api } from "@/convex/_generated/api";
 import React from "react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+
+type Sizes = Array<{
+    size: number;
+    stock: number;
+}>;
 
 export const columns: ColumnDef<Doc<"shoes">>[] = [
     {
@@ -58,6 +64,33 @@ export const columns: ColumnDef<Doc<"shoes">>[] = [
         accessorKey: "brand",
         header: "Brand",
         filterFn: (row, id, value) => value.includes(row.getValue(id)),
+    },
+    {
+        accessorKey: "sizes",
+        header: "Stock",
+        cell: ({ row }) => {
+            const sizes = row.getValue("sizes") as Sizes;
+
+            return (
+                <div className="flex flex-wrap gap-1.5">
+                    {sizes.map((item) => (
+                        <Badge
+                            key={item.size}
+                            variant={item.stock > 0 ? "default" : "secondary"}
+                            className="text-xs"
+                        >
+                            {item.size}: {item.stock}
+                        </Badge>
+                    ))}
+                </div>
+            );
+        },
+        filterFn: (row, id, value) =>
+            value.length === 2
+                ? true
+                : value[0] === "In Stock"
+                  ? (row.getValue(id) as Sizes).some((s) => s.stock > 0)
+                  : (row.getValue(id) as Sizes).every((s) => s.stock === 0),
     },
     {
         id: "actions",

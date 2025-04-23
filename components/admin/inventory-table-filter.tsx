@@ -47,6 +47,13 @@ export default function InventoryTableFilter({
                 options={brands}
                 column={table.getColumn("brand")}
             />
+            <TableFacetedFilter
+                title="Stock"
+                options={["In Stock", "Out of Stock"].map((v) => ({
+                    value: v,
+                }))}
+                column={table.getColumn("sizes")}
+            />
         </div>
     );
 }
