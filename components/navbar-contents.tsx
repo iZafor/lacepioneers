@@ -1,4 +1,4 @@
-import { Home, ListTree, LucideIcon, Package } from "lucide-react";
+import { Home, ListTree, LucideIcon, Wrench } from "lucide-react";
 import {
     SidebarGroup,
     SidebarGroupLabel,
@@ -65,23 +65,31 @@ export default function NavbarContents() {
         if (
             user &&
             user.role === "admin" &&
-            items.every((i) => i.title !== "Inventory")
+            items.every((i) => i.title !== "Manage Operations")
         ) {
             setItems((prev) => [
                 ...prev,
                 {
-                    title: "Inventory",
-                    icon: Package,
+                    title: "Manage Operations",
+                    icon: Wrench,
                     items: [
                         {
                             title: "Manage Inventory",
                             url: "/admin",
                         },
+                        {
+                            title: "Manage Orders",
+                            url: "/admin/orders",
+                        },
                     ],
                 },
             ]);
+        } else {
+            setItems((prev) =>
+                prev.filter((i) => i.title !== "Manage Operations")
+            );
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user]);
 
     return (

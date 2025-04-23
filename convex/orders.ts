@@ -73,3 +73,25 @@ export const addOrders = mutation({
         }
     },
 });
+
+export const deleteOrder = mutation({
+    args: { id: v.id("orders") },
+    handler: async (ctx, { id }) => {
+        const identity = await ctx.auth.getUserIdentity();
+        if (!identity) return null;
+
+        const isAdmin = await ctx.db
+            .query("users")
+            .withIndex("by_email")
+            .filter(
+                (q) =>
+                    q.eq(q.field("email"), identity.email) &&
+                    q.eq(q.field("role"), "admin")
+            )
+            .first();
+
+        if (isAdmin) {
+            await ctx.db.delete(id);
+        }
+    },
+});

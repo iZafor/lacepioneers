@@ -3,7 +3,7 @@
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 
-import { columns } from "./columns";
+import { inventoryTableColumns } from "./columns";
 import DataTable from "@/components/data-table";
 import InventoryTableFilter from "./inventory-table-filter";
 import React from "react";
@@ -20,7 +20,7 @@ export default function InventoryTable({
         <div {...props} className={cn("space-y-4", className)}>
             <h3 className="text-xl font-semibold text-prime">Products</h3>
             <DataTable
-                columns={columns}
+                columns={inventoryTableColumns}
                 data={data}
                 tableFilter={InventoryTableFilter}
                 paginationDefault={{

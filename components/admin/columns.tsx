@@ -17,13 +17,14 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { format, parseISO } from "date-fns";
 
 type Sizes = Array<{
     size: number;
     stock: number;
 }>;
 
-export const columns: ColumnDef<Doc<"shoes">>[] = [
+export const inventoryTableColumns: ColumnDef<Doc<"shoes">>[] = [
     {
         accessorKey: "name",
         header: "Name",
@@ -115,7 +116,7 @@ export const columns: ColumnDef<Doc<"shoes">>[] = [
                             </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem variant="destructive">
-                            <DeleteComp id={product._id} />
+                            <DeleteCompShoes id={product._id} />
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
@@ -124,7 +125,196 @@ export const columns: ColumnDef<Doc<"shoes">>[] = [
     },
 ];
 
-function DeleteComp({
+export const ordersTableColumns: ColumnDef<Doc<"orders">>[] = [
+    {
+        accessorKey: "orderId",
+        header: "Order ID",
+        cell: ({ row }) => {
+            return <div>#{row.original._id.slice(-6)}</div>;
+        },
+        filterFn: (row, _, value) =>
+            row.original._id
+                .toLowerCase()
+                .includes((value as string).toLowerCase()),
+    },
+    {
+        accessorKey: "name",
+        header: "Name",
+    },
+    {
+        accessorKey: "address",
+        header: "Address",
+        cell: ({ row }) => {
+            const order = row.original;
+            return (
+                <div className="space-y-1">
+                    <p className="text-sm">{order.address}</p>
+                    <p className="text-xs text-muted-foreground">
+                        {[order.city, order.state, order.zipCode]
+                            .filter((s) => s)
+                            .join(", ")}
+                    </p>
+                </div>
+            );
+        },
+    },
+    {
+        accessorKey: "orderDate",
+        header: ({ column }) => (
+            <SortableTableHeader title="Order Date" column={column} />
+        ),
+        cell: ({ row }) => {
+            const date = row.getValue("orderDate") as string;
+            return (
+                <div className="space-y-1">
+                    <p className="text-sm font-medium">
+                        {format(parseISO(date), "MMM d, yyyy")}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                        {format(parseISO(date), "h:mm a")}
+                    </p>
+                </div>
+            );
+        },
+    },
+    {
+        accessorKey: "deliveryDate",
+        header: ({ column }) => (
+            <SortableTableHeader title="Delivery Date" column={column} />
+        ),
+        cell: ({ row }) => {
+            const date = row.getValue("deliveryDate") as string | undefined;
+            if (!date) return <div>-</div>;
+
+            return (
+                <div className="space-y-1">
+                    <p className="text-sm font-medium">
+                        {format(parseISO(date), "MMM d, yyyy")}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                        {format(parseISO(date), "h:mm a")}
+                    </p>
+                </div>
+            );
+        },
+    },
+    {
+        accessorKey: "paymentMethod",
+        header: "Payment Method",
+        cell: ({ row }) => {
+            return (
+                <Badge variant="outline" className="capitalize">
+                    {(row.getValue("paymentMethod") as string).replace(
+                        "-",
+                        " "
+                    )}
+                </Badge>
+            );
+        },
+        filterFn: (row, id, value) => value.includes(row.getValue(id)),
+    },
+    {
+        accessorKey: "paymentStatus",
+        header: "Payment",
+        cell: ({ row }) => {
+            const status = row.getValue("paymentStatus") as string;
+            return (
+                <Badge
+                    variant={
+                        status === "paid"
+                            ? "success"
+                            : status === "pending"
+                              ? "warning"
+                              : "destructive"
+                    }
+                    className="capitalize"
+                >
+                    {status}
+                </Badge>
+            );
+        },
+        filterFn: (row, id, value) => value.includes(row.getValue(id)),
+    },
+    {
+        accessorKey: "status",
+        header: "Order Status",
+        cell: ({ row }) => {
+            const status = row.getValue("status") as string;
+            return (
+                <Badge
+                    variant={
+                        status === "delivered"
+                            ? "default"
+                            : status === "in-transit"
+                              ? "warning"
+                              : status === "confirmed"
+                                ? "success"
+                                : "secondary"
+                    }
+                    className="capitalize"
+                >
+                    {status.replace("-", " ")}
+                </Badge>
+            );
+        },
+        filterFn: (row, id, value) => value.includes(row.getValue(id)),
+    },
+    {
+        accessorKey: "items",
+        header: "Items",
+        cell: ({ row }) => {
+            const items = row.getValue("items") as Array<{
+                productId: Id<"shoes">;
+                price: number;
+                size: number;
+                quantity: number;
+            }>;
+            const totalItems = items.reduce(
+                (acc, item) => acc + item.quantity,
+                0
+            );
+            const totalAmount = items.reduce(
+                (acc, item) => acc + item.price * item.quantity,
+                0
+            );
+
+            return (
+                <div className="space-y-1">
+                    <div className="text-sm font-medium">
+                        {totalItems} {totalItems === 1 ? "item" : "items"}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                        Total: ${totalAmount.toFixed(2)}
+                    </div>
+                </div>
+            );
+        },
+    },
+    {
+        id: "actions",
+        cell: ({ row }) => {
+            const product = row.original;
+
+            return (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem variant="destructive">
+                            <DeleteCompOrders id={product._id} />
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            );
+        },
+    },
+];
+
+function DeleteCompShoes({
     id,
     className,
     ...props
@@ -136,6 +326,24 @@ function DeleteComp({
             {...props}
             className={cn("w-full", className)}
             onClick={async () => await deleteShoeData({ id })}
+        >
+            Delete
+        </span>
+    );
+}
+
+function DeleteCompOrders({
+    id,
+    className,
+    ...props
+}: { id: Id<"orders"> } & React.ComponentProps<"span">) {
+    const deleteOrderData = useMutation(api.orders.deleteOrder);
+
+    return (
+        <span
+            {...props}
+            className={cn("w-full", className)}
+            onClick={async () => await deleteOrderData({ id })}
         >
             Delete
         </span>

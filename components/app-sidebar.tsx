@@ -6,6 +6,7 @@ import {
     Sidebar,
     SidebarContent,
     SidebarFooter,
+    SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -35,6 +36,7 @@ export default function AppSidebar({
             <Sidebar variant="floating" collapsible="icon">
                 <SidebarContent>
                     <NavbarContents />
+                    <SidebarSeparator />
                     <NavbarQuickActions />
                 </SidebarContent>
 
