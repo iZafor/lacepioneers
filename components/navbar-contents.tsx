@@ -9,6 +9,7 @@ import {
     SidebarMenuSub,
     SidebarMenuSubItem,
     SidebarMenuSubButton,
+    useSidebar,
 } from "./ui/sidebar";
 import { api } from "@/convex/_generated/api";
 import { useQuery } from "convex/react";
@@ -33,17 +34,14 @@ const defaultItems: SidebarItems[] = [
     },
 ];
 
-interface NavbarContentsProps {
-    className?: string;
-    onOpenNavbar: () => void;
-}
-
-export default function NavbarContents({ onOpenNavbar }: NavbarContentsProps) {
+export default function NavbarContents() {
     const [items, setItems] = useState(defaultItems);
     const categories = useQuery(api.shoes.getShoesBy, {
         distinct: "category",
         select: ["category"],
     })?.map((o) => o["category"]) as string[];
+    const { setOpen } = useSidebar();
+
     useEffect(() => {
         if (categories && items.every((i) => i.title !== "Categories")) {
             setItems((prev) => [
@@ -77,7 +75,7 @@ export default function NavbarContents({ onOpenNavbar }: NavbarContentsProps) {
                                 ) : (
                                     <div
                                         className="cursor-pointer"
-                                        onClick={onOpenNavbar}
+                                        onClick={() => setOpen(true)}
                                     >
                                         <item.icon className="text-prime" />
                                         <span>{item.title}</span>

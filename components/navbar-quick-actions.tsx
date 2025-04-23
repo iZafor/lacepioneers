@@ -1,5 +1,6 @@
+import dynamic from "next/dynamic";
+
 import Cart from "./cart";
-import ThemeSwitcher from "./theme-switcher";
 import {
     SidebarGroup,
     SidebarGroupContent,
@@ -8,6 +9,8 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from "./ui/sidebar";
+
+const ThemeSwitcher = dynamic(() => import("./theme-switcher"), { ssr: false });
 
 export default function NavbarQuickActions() {
     return (

@@ -34,7 +34,7 @@ export default function AppSidebar({
         <SidebarProvider open={open} onOpenChange={setOpen} defaultOpen={false}>
             <Sidebar variant="floating" collapsible="icon">
                 <SidebarContent>
-                    <NavbarContents onOpenNavbar={() => setOpen(true)} />
+                    <NavbarContents />
                     <NavbarQuickActions />
                 </SidebarContent>
 
