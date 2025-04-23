@@ -14,6 +14,19 @@ export const getUser = query({
     },
 });
 
+export const isUserAdmin = query({
+    args: { clerkId: v.string() },
+    handler: async (ctx, { clerkId }) => {
+        return (
+            await ctx.db
+                .query("users")
+                .withIndex("by_role")
+                .filter((q) => q.eq(q.field("role"), "admin"))
+                .collect()
+        ).some((u) => u.clerkUserId === clerkId);
+    },
+});
+
 export const syncUser = mutation({
     handler: async (ctx) => {
         const identity = await ctx.auth.getUserIdentity();

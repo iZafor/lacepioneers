@@ -1,12 +1,27 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { fetchQuery } from "convex/nextjs";
+import { api } from "./convex/_generated/api";
+import { NextResponse } from "next/server";
 
 const isProtectedRoute = createRouteMatcher(["/profile(.*)", "/admin(.*)"]);
+const isAdminRoute = createRouteMatcher(["/admin(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
     const { userId, redirectToSignIn } = await auth();
 
     if (!userId && isProtectedRoute(req)) {
         return redirectToSignIn();
+    }
+
+    if (isAdminRoute(req)) {
+        const isAdmin = userId
+            ? await fetchQuery(api.users.isUserAdmin, {
+                  clerkId: userId,
+              })
+            : false;
+        if (!isAdmin) {
+            return NextResponse.redirect(new URL("/", req.url));
+        }
     }
 });
 
