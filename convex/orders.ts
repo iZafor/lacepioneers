@@ -64,6 +64,42 @@ export const addOrders = mutation({
         try {
             if (order.items.length > 0) {
                 await ctx.db.insert("orders", order);
+
+                const productIds = [
+                    ...new Set(order.items.map((item) => item.productId)),
+                ];
+
+                const shoesSizes = (
+                    await Promise.all(
+                        productIds.map((id) =>
+                            ctx.db
+                                .query("shoes")
+                                .filter((q) => q.eq(q.field("_id"), id))
+                                .unique()
+                        )
+                    )
+                ).map((d) => ({ id: d!._id, sizes: d!.sizes }));
+
+                order.items.forEach((oi) => {
+                    const idx = shoesSizes.findIndex(
+                        (s) => s.id === oi.productId
+                    );
+                    if (idx !== -1) {
+                        shoesSizes[idx].sizes = shoesSizes[idx].sizes.map(
+                            (s) =>
+                                s.size === oi.size
+                                    ? { size: s.size, stock: s.stock - oi.quantity }
+                                    : s
+                        );
+                    }
+                });
+
+                await Promise.all(
+                    shoesSizes.map((s) =>
+                        ctx.db.patch(s.id, { sizes: s.sizes })
+                    )
+                );
+
                 return true;
             }
             return false;
