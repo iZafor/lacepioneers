@@ -31,23 +31,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useEffect, useState } from "react";
-
-const DUMMY_ORDERS = [
-    {
-        id: "ord_1",
-        date: "2024-04-20",
-        status: "Delivered",
-        total: 299.99,
-        items: [{ name: "Nike Air Max", quantity: 1, price: 299.99 }],
-    },
-    {
-        id: "ord_2",
-        date: "2024-04-15",
-        status: "Processing",
-        total: 399.98,
-        items: [{ name: "Adidas Ultra Boost", quantity: 2, price: 199.99 }],
-    },
-];
+import Image from "next/image";
+import { Doc } from "@/convex/_generated/dataModel";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const profileSchema = z.object({
     phone: z.string().optional(),
@@ -59,6 +45,39 @@ const profileSchema = z.object({
 
 const TAB_VALUES = ["profile", "orders", "settings"] as const;
 type TabValue = (typeof TAB_VALUES)[number];
+
+function getStatusColor(status: string) {
+    switch (status) {
+        case "delivered":
+            return "default";
+        case "in-transit":
+            return "warning";
+        case "confirmed":
+            return "success";
+        case "processing":
+            return "secondary";
+        default:
+            return "secondary";
+    }
+}
+
+function getPaymentStatusColor(status: string) {
+    switch (status) {
+        case "complete":
+            return "success";
+        case "in-complete":
+            return "warning";
+        default:
+            return "warning";
+    }
+}
+
+function formatStatus(status: string) {
+    return status
+        .split("-")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
+}
 
 export default function ProfilePage() {
     const router = useRouter();
@@ -86,6 +105,14 @@ export default function ProfilePage() {
 
     const userData = useQuery(api.users.getUser);
     const updateUser = useMutation(api.users.updateUser);
+    const orders = useQuery(api.orders.getOrders);
+    const products = useQuery(api.shoes.getShoesBy, {
+        field: "_id",
+        values:
+            orders?.flatMap((order) =>
+                order.items.map((item) => item.productId)
+            ) || [],
+    });
 
     const [isUpdating, setIsUpdating] = useState(false);
 
@@ -297,68 +324,214 @@ export default function ProfilePage() {
                         <CardHeader>
                             <CardTitle>Order History</CardTitle>
                             <CardDescription>
-                                View your past orders
+                                View and track your orders
                             </CardDescription>
                         </CardHeader>
-                        <CardContent>
-                            <div className="space-y-4">
-                                {DUMMY_ORDERS.map((order) => (
-                                    <Card key={order.id}>
-                                        <CardContent className="p-4">
-                                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-0 sm:justify-between">
-                                                <div>
-                                                    <p className="font-medium">
-                                                        Order #{order.id}
-                                                    </p>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        {new Date(
-                                                            order.date
-                                                        ).toLocaleDateString()}
-                                                    </p>
-                                                </div>
-                                                <div className="flex sm:flex-col items-center sm:items-end gap-2 sm:gap-0">
-                                                    <p className="font-medium">
-                                                        $
-                                                        {order.total.toFixed(2)}
-                                                    </p>
-                                                    <Badge
-                                                        variant={
-                                                            order.status ===
-                                                            "Delivered"
-                                                                ? "default"
-                                                                : "secondary"
-                                                        }
-                                                    >
-                                                        {order.status}
-                                                    </Badge>
-                                                </div>
-                                            </div>
-                                            <Separator className="my-4" />
-                                            <div className="space-y-2">
-                                                {order.items.map(
-                                                    (item, idx) => (
-                                                        <div
-                                                            key={idx}
-                                                            className="flex flex-col sm:flex-row sm:justify-between text-sm"
-                                                        >
-                                                            <span className="font-medium sm:font-normal">
-                                                                {item.quantity}x{" "}
-                                                                {item.name}
-                                                            </span>
-                                                            <span>
-                                                                $
-                                                                {item.price.toFixed(
-                                                                    2
-                                                                )}
-                                                            </span>
+                        <CardContent className="p-0">
+                            <ScrollArea className="h-[32rem]">
+                                <div className="p-4">
+                                    {orders?.length === 0 ? (
+                                        <div className="text-center py-8 text-muted-foreground">
+                                            <p>No orders found</p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            {orders?.map((order) => (
+                                                <Card key={order._id}>
+                                                    <CardContent className="p-4">
+                                                        <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:justify-between">
+                                                            <div className="space-y-2">
+                                                                <div className="flex items-center gap-2 flex-wrap">
+                                                                    <p className="font-medium">
+                                                                        Order #
+                                                                        {order._id.slice(
+                                                                            -6
+                                                                        )}
+                                                                    </p>
+                                                                    <Badge
+                                                                        variant={getStatusColor(
+                                                                            order.status
+                                                                        )}
+                                                                    >
+                                                                        {formatStatus(
+                                                                            order.status
+                                                                        )}
+                                                                    </Badge>
+                                                                </div>
+                                                                <div className="text-sm text-muted-foreground space-y-1">
+                                                                    <p>
+                                                                        Ordered:{" "}
+                                                                        {new Date(
+                                                                            order.orderDate
+                                                                        ).toLocaleDateString()}
+                                                                    </p>
+                                                                    {order.deliveryDate && (
+                                                                        <p>
+                                                                            Delivered:{" "}
+                                                                            {new Date(
+                                                                                order.deliveryDate
+                                                                            ).toLocaleDateString()}
+                                                                        </p>
+                                                                    )}
+                                                                    <p className="flex items-center gap-2">
+                                                                        Payment
+                                                                        Method:{" "}
+                                                                        <span className="font-medium">
+                                                                            {formatStatus(
+                                                                                order.paymentMethod
+                                                                            )}
+                                                                        </span>
+                                                                        <Badge
+                                                                            variant={getPaymentStatusColor(
+                                                                                order.paymentStatus
+                                                                            )}
+                                                                        >
+                                                                            {formatStatus(
+                                                                                order.paymentStatus
+                                                                            )}
+                                                                        </Badge>
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="text-sm space-y-1">
+                                                                <p className="font-medium">
+                                                                    Shipping
+                                                                    Address:
+                                                                </p>
+                                                                <p>
+                                                                    {
+                                                                        order.address
+                                                                    }
+                                                                </p>
+                                                                <p>
+                                                                    {[
+                                                                        order.city,
+                                                                        order.state,
+                                                                        order.zipCode,
+                                                                    ]
+                                                                        .filter(
+                                                                            (
+                                                                                s
+                                                                            ) =>
+                                                                                s
+                                                                        )
+                                                                        .join(
+                                                                            ", "
+                                                                        )}
+                                                                </p>
+                                                                <p>
+                                                                    Phone:{" "}
+                                                                    {
+                                                                        order.phone
+                                                                    }
+                                                                </p>
+                                                            </div>
                                                         </div>
-                                                    )
-                                                )}
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                ))}
-                            </div>
+
+                                                        <Separator className="my-4" />
+
+                                                        <div className="space-y-3">
+                                                            {order.items.map(
+                                                                (item, idx) => {
+                                                                    const product =
+                                                                        products?.find(
+                                                                            (
+                                                                                p
+                                                                            ) =>
+                                                                                p._id ===
+                                                                                item.productId
+                                                                        ) as Doc<"shoes">;
+                                                                    return (
+                                                                        <div
+                                                                            key={
+                                                                                idx
+                                                                            }
+                                                                            className="flex items-center justify-between text-sm"
+                                                                        >
+                                                                            <div className="flex items-center gap-3">
+                                                                                {product && (
+                                                                                    <Image
+                                                                                        src={
+                                                                                            product.defaultImage
+                                                                                        }
+                                                                                        alt={
+                                                                                            product.name
+                                                                                        }
+                                                                                        width={
+                                                                                            48
+                                                                                        }
+                                                                                        height={
+                                                                                            48
+                                                                                        }
+                                                                                        className="rounded-md"
+                                                                                    />
+                                                                                )}
+                                                                                <div>
+                                                                                    <p className="font-medium">
+                                                                                        {product?.name ||
+                                                                                            "Product Not Found"}
+                                                                                    </p>
+                                                                                    <p className="text-muted-foreground">
+                                                                                        Size:{" "}
+                                                                                        {
+                                                                                            item.size
+                                                                                        }{" "}
+                                                                                        •
+                                                                                        Qty:{" "}
+                                                                                        {
+                                                                                            item.quantity
+                                                                                        }
+                                                                                    </p>
+                                                                                </div>
+                                                                            </div>
+                                                                            <p className="font-medium">
+                                                                                $
+                                                                                {(
+                                                                                    item.price *
+                                                                                    item.quantity
+                                                                                ).toFixed(
+                                                                                    2
+                                                                                )}
+                                                                            </p>
+                                                                        </div>
+                                                                    );
+                                                                }
+                                                            )}
+                                                        </div>
+
+                                                        <Separator className="my-4" />
+
+                                                        <div className="flex justify-end">
+                                                            <div className="text-right">
+                                                                <p className="text-sm text-muted-foreground">
+                                                                    Total
+                                                                </p>
+                                                                <p className="text-lg font-semibold">
+                                                                    $
+                                                                    {order.items
+                                                                        .reduce(
+                                                                            (
+                                                                                acc,
+                                                                                item
+                                                                            ) =>
+                                                                                acc +
+                                                                                item.price *
+                                                                                    item.quantity,
+                                                                            0
+                                                                        )
+                                                                        .toFixed(
+                                                                            2
+                                                                        )}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </CardContent>
+                                                </Card>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </ScrollArea>
                         </CardContent>
                     </Card>
                 </TabsContent>

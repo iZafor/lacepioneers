@@ -27,20 +27,23 @@ export default defineSchema({
         zipCode: v.optional(v.string()),
         profileImage: v.optional(v.string()),
         profileImageId: v.optional(v.id("_storage")),
-        clerkUserId: v.string()
+        clerkUserId: v.string(),
     })
         .index("by_name", ["name"])
         .index("by_role", ["role"])
         .index("by_email", ["email"]),
 
     orders: defineTable({
-        userId: v.optional(v.id("users")),
         email: v.string(),
         phone: v.string(),
         address: v.string(),
         city: v.optional(v.string()),
         state: v.optional(v.string()),
         zipCode: v.optional(v.string()),
+        orderDate: v.string(),
+        deliveryDate: v.optional(v.string()),
+        paymentMethod: v.union(v.literal("cod"), v.literal("online")),
+        paymentStatus: v.union(v.literal("in-complete"), v.literal("complete")),
         status: v.union(
             v.literal("processing"),
             v.literal("confirmed"),
@@ -55,5 +58,5 @@ export default defineSchema({
                 quantity: v.number(),
             })
         ),
-    }),
+    }).index("by_email", ["email"]),
 });
