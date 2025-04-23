@@ -1,6 +1,5 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
     Popover,
@@ -22,8 +21,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 
 export default function Cart({ className }: { className?: string }) {
-    const pathname = usePathname();
-    const isAdmin = pathname.toLowerCase().includes("admin");
     const { products: cartProducts, updateCart, setCount } = useCart();
     const products = useQuery(api.shoes.getShoesBy, {
         field: "_id",
@@ -36,8 +33,6 @@ export default function Cart({ className }: { className?: string }) {
             cartProducts.find((cp) => cp.productId === p._id)?.count ?? 0;
         return acc + p.price * quantity;
     }, 0);
-
-    if (isAdmin) return null;
 
     return (
         <Popover>

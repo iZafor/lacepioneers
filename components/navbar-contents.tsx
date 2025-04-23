@@ -1,4 +1,4 @@
-import { Home, ListTree, LucideIcon } from "lucide-react";
+import { Home, ListTree, LucideIcon, Package } from "lucide-react";
 import {
     SidebarGroup,
     SidebarGroupLabel,
@@ -42,6 +42,8 @@ export default function NavbarContents() {
     })?.map((o) => o["category"]) as string[];
     const { setOpen } = useSidebar();
 
+    const user = useQuery(api.users.getUser);
+
     useEffect(() => {
         if (categories && items.every((i) => i.title !== "Categories")) {
             setItems((prev) => [
@@ -58,6 +60,29 @@ export default function NavbarContents() {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [categories]);
+
+    useEffect(() => {
+        if (
+            user &&
+            user.role === "admin" &&
+            items.every((i) => i.title !== "Inventory")
+        ) {
+            setItems((prev) => [
+                ...prev,
+                {
+                    title: "Inventory",
+                    icon: Package,
+                    items: [
+                        {
+                            title: "Manage Inventory",
+                            url: "/admin",
+                        },
+                    ],
+                },
+            ]);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user]);
 
     return (
         <SidebarGroup>

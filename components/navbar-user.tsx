@@ -95,24 +95,26 @@ export function NavUser() {
                                 </div>
                             </DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuGroup>
-                                <DropdownMenuItem
-                                    onClick={() =>
-                                        router.push("/profile?tab=profile")
-                                    }
-                                >
-                                    <UserCircleIcon />
-                                    Account
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    onClick={() =>
-                                        router.push("/profile?tab=orders")
-                                    }
-                                >
-                                    <CreditCardIcon />
-                                    Orders
-                                </DropdownMenuItem>
-                            </DropdownMenuGroup>
+                            {user.role !== "admin" && (
+                                <DropdownMenuGroup>
+                                    <DropdownMenuItem
+                                        onClick={() =>
+                                            router.push("/profile?tab=profile")
+                                        }
+                                    >
+                                        <UserCircleIcon />
+                                        Account
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        onClick={() =>
+                                            router.push("/profile?tab=orders")
+                                        }
+                                    >
+                                        <CreditCardIcon />
+                                        Orders
+                                    </DropdownMenuItem>
+                                </DropdownMenuGroup>
+                            )}
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
                                 onClick={() => signOut({ redirectUrl: "/" })}

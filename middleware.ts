@@ -3,25 +3,32 @@ import { fetchQuery } from "convex/nextjs";
 import { api } from "./convex/_generated/api";
 import { NextResponse } from "next/server";
 
-const isProtectedRoute = createRouteMatcher(["/profile(.*)", "/admin(.*)"]);
 const isAdminRoute = createRouteMatcher(["/admin(.*)"]);
+const isUserRoute = createRouteMatcher(["/profile(.*)"]);
+const isExtraNonAdminRoute = createRouteMatcher(["/checkout(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
     const { userId, redirectToSignIn } = await auth();
 
-    if (!userId && isProtectedRoute(req)) {
+    const adminRoute = isAdminRoute(req);
+    const userRoute = isUserRoute(req);
+    const extraNonAdminRoute = isExtraNonAdminRoute(req);
+
+    if (!userId && (adminRoute || userRoute)) {
         return redirectToSignIn();
     }
 
-    if (isAdminRoute(req)) {
-        const isAdmin = userId
-            ? await fetchQuery(api.users.isUserAdmin, {
-                  clerkId: userId,
-              })
-            : false;
-        if (!isAdmin) {
-            return NextResponse.redirect(new URL("/", req.url));
-        }
+    const isAdmin = userId
+        ? await fetchQuery(api.users.isUserAdmin, {
+              clerkId: userId,
+          })
+        : false;
+
+    if (
+        (adminRoute && !isAdmin) ||
+        ((userRoute || extraNonAdminRoute) && isAdmin)
+    ) {
+        return NextResponse.redirect(new URL("/", req.url));
     }
 });
 
