@@ -23,6 +23,7 @@ import { Input } from "./ui/input";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { SquareArrowOutUpRight } from "lucide-react";
 import { useCart } from "@/lib/store";
+import { useRouter } from "next/navigation";
 
 export default function Product({
     product,
@@ -38,6 +39,7 @@ export default function Product({
     );
     const [isLoading, setIsLoading] = useState(true);
     const isAvailable = product.sizes.some((s) => s.stock > 0);
+    const router = useRouter();
 
     return (
         <Card
@@ -163,6 +165,12 @@ export default function Product({
                         className="w-full border-2 bg-prime hover:bg-amber-600 text-white border-slate-900"
                         disabled={!isAvailable}
                         variant="secondary"
+                        onClick={() => {
+                            if (size && isAvailable) {
+                                updateCart(product._id, quantity, size);
+                                router.push("/checkout");
+                            }
+                        }}
                     >
                         Buy Now
                     </Button>
