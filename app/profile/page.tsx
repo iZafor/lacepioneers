@@ -34,6 +34,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Doc } from "@/convex/_generated/dataModel";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { format, parseISO } from "date-fns";
 
 const profileSchema = z.object({
     phone: z.string().optional(),
@@ -355,16 +356,22 @@ export default function ProfilePage() {
                                                                 <div className="text-sm text-muted-foreground space-y-1">
                                                                     <p>
                                                                         Ordered:{" "}
-                                                                        {new Date(
-                                                                            order.orderDate
-                                                                        ).toLocaleDateString()}
+                                                                        {format(
+                                                                            parseISO(
+                                                                                order.orderDate
+                                                                            ),
+                                                                            "MMM d, yyyy"
+                                                                        )}
                                                                     </p>
                                                                     {order.deliveryDate && (
                                                                         <p>
                                                                             Delivered:{" "}
-                                                                            {new Date(
-                                                                                order.deliveryDate
-                                                                            ).toLocaleDateString()}
+                                                                            {format(
+                                                                                parseISO(
+                                                                                    order.deliveryDate
+                                                                                ),
+                                                                                "MMM d, yyyy"
+                                                                            )}
                                                                         </p>
                                                                     )}
                                                                     <p className="flex items-center gap-2">
