@@ -12,11 +12,7 @@ export default function Home() {
     })?.map((o) => o["category"]) as string[];
 
     return (
-        <div className="px-10 mt-10 mb-4 space-y-6">
-            {categories &&
-                categories.map((cat) => (
-                    <ProductCategory key={cat} category={cat} />
-                ))}
-        </div>
+        categories &&
+        categories.map((cat) => <ProductCategory key={cat} category={cat} />)
     );
 }

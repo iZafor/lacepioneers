@@ -139,7 +139,7 @@ export default function Page() {
     }
 
     return (
-        <div className="px-4 w-full space-y-4">
+        <div className="w-full space-y-4">
             <h3 className="text-2xl text-prime font-semibold">Checkout</h3>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 ">

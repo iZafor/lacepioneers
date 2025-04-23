@@ -44,24 +44,24 @@ export default function Cart({ className }: { className?: string }) {
             <PopoverTrigger asChild>
                 <Button
                     variant="ghost"
-                    size="icon"
-                    className={cn("relative", className)}
+                    className={cn("justify-start", className)}
+                    style={{
+                        paddingLeft: ".5rem",
+                    }}
                 >
-                    <ShoppingCart className="size-5" />
+                    <ShoppingCart className="size-4 text-prime" />
                     {totalItems > 0 && (
                         <Badge
                             variant="destructive"
-                            className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center"
+                            className="z-50 absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center"
                         >
                             {totalItems}
                         </Badge>
                     )}
+                    <span className="text-sm">Cart</span>
                 </Button>
             </PopoverTrigger>
-            <PopoverContent
-                className={cn("p-0 w-[20rem] overflow-hidden", className)}
-                align="end"
-            >
+            <PopoverContent align="start" side="right" className="w-[20rem]">
                 <div className="p-4 flex items-center justify-between border-b">
                     <h2 className="font-semibold">Shopping Cart</h2>
                     <Badge variant="secondary">{totalItems} items</Badge>
