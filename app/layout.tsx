@@ -5,6 +5,8 @@ import "./globals.css";
 import Providers from "./providers";
 import AppSidebar from "@/components/app-sidebar";
 
+import { Analytics } from "@vercel/analytics/react";
+
 const geistSans = Geist({
     variable: "--font-geist-sans",
     subsets: ["latin"],
@@ -29,6 +31,7 @@ export default function RootLayout({
             <body
                 className={`${geistSans.variable} ${geistMono.variable} antialiased`}
             >
+                <Analytics />
                 <Providers>
                     <AppSidebar>{children}</AppSidebar>
                 </Providers>
