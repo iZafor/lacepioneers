@@ -1,9 +1,9 @@
 "use client";
 
 import { useCart } from "@/lib/store";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Doc } from "@/convex/_generated/dataModel";
+import { Doc, Id } from "@/convex/_generated/dataModel";
 import Image from "next/image";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -28,14 +28,16 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 const formSchema = z.object({
-    fullName: z.string().min(2, "Name must be at least 2 characters"),
+    name: z.string().min(2, "Name must be at least 2 characters"),
     email: z.string().email("Invalid email address"),
-    phone: z.string().min(10, "Invalid phone number"),
+    phone: z.string().min(11, "Invalid phone number"),
     address: z.string().min(10, "Please enter complete address"),
     city: z.string().min(2, "City is required"),
     state: z.string().optional(),
@@ -45,26 +47,48 @@ const formSchema = z.object({
 });
 
 export default function Page() {
-    const [couponApplied, setCouponApplied] = useState(false);
-    const { products: cartProducts, updateCart } = useCart();
+    const { products: cartProducts, updateCart, clearCart } = useCart();
     const products = useQuery(api.shoes.getShoesBy, {
         field: "_id",
         values: cartProducts.map((p) => p.productId),
     }) as Doc<"shoes">[];
+    const userData = useQuery(api.users.getUser);
+    const addOrders = useMutation(api.orders.addOrders);
+
+    const [couponApplied, setCouponApplied] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const router = useRouter();
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            fullName: "",
-            email: "",
-            phone: "",
-            address: "",
-            city: "",
-            state: "",
-            zipCode: "",
+            name: userData?.name ?? "",
+            email: userData?.email ?? "",
+            phone: userData?.phone ?? "",
+            address: userData?.address ?? "",
+            city: userData?.city ?? "",
+            state: userData?.state ?? "",
+            zipCode: userData?.zipCode ?? "",
             paymentMethod: "cod",
         },
     });
+
+    useEffect(() => {
+        if (userData) {
+            form.reset({
+                name: userData?.name ?? "",
+                email: userData?.email ?? "",
+                phone: userData?.phone ?? "",
+                address: userData?.address ?? "",
+                city: userData?.city ?? "",
+                state: userData?.state ?? "",
+                zipCode: userData?.zipCode ?? "",
+                paymentMethod: "cod",
+            });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [userData]);
 
     const subtotal =
         products?.reduce((acc, p) => {
@@ -77,8 +101,41 @@ export default function Page() {
     const discount = couponApplied ? subtotal * 0.1 : 0;
     const total = cartProducts.length > 0 ? subtotal + shipping - discount : 0;
 
-    function onSubmit(values: z.infer<typeof formSchema>) {
-        console.log(values);
+    async function onSubmit(values: z.infer<typeof formSchema>) {
+        setIsLoading(true);
+
+        if (subtotal > 0) {
+            const items = cartProducts.map((cp) => ({
+                productId: cp.productId as Id<"shoes">,
+                price: products.find((p) => p._id === cp.productId)!.price,
+                size: cp.size,
+                quantity: cp.count,
+            }));
+
+            const orderAdded = await addOrders({
+                order: {
+                    ...values,
+                    orderDate: new Date().toISOString(),
+                    status: "processing",
+                    paymentStatus: "in-complete",
+                    items,
+                },
+            });
+
+            if (orderAdded) {
+                toast("Order has been created.");
+                clearCart();
+                router.replace("/");
+            } else {
+                toast("Failed to create order!", {
+                    style: {
+                        color: "var(--color-destructive)",
+                    },
+                });
+            }
+        }
+
+        setIsLoading(false);
     }
 
     return (
@@ -216,7 +273,7 @@ export default function Page() {
                             <CardContent className="space-y-4">
                                 <FormField
                                     control={form.control}
-                                    name="fullName"
+                                    name="name"
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Full Name</FormLabel>
@@ -385,7 +442,11 @@ export default function Page() {
                             </CardContent>
                         </Card>
 
-                        <Button type="submit" className="w-full">
+                        <Button
+                            type="submit"
+                            className="w-full"
+                            disabled={isLoading}
+                        >
                             Place Order (${total.toFixed(2)})
                         </Button>
                     </form>

@@ -4,6 +4,7 @@ interface CartState {
     products: { productId: string; count: number; size: number }[];
     updateCart: (productId: string, count: number, size: number) => void;
     setCount: (productId: string, count: number) => void;
+    clearCart: () => void;
 }
 
 export const useCart = create<CartState>((set) => ({
@@ -53,4 +54,5 @@ export const useCart = create<CartState>((set) => ({
                     : p
             ),
         })),
+    clearCart: () => set(() => ({ products: [] })),
 }));

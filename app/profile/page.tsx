@@ -72,13 +72,6 @@ function getPaymentStatusColor(status: string) {
     }
 }
 
-function formatStatus(status: string) {
-    return status
-        .split("-")
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ");
-}
-
 export default function ProfilePage() {
     const router = useRouter();
     const pathname = usePathname();
@@ -352,10 +345,11 @@ export default function ProfilePage() {
                                                                         variant={getStatusColor(
                                                                             order.status
                                                                         )}
+                                                                        className="capitalize"
                                                                     >
-                                                                        {formatStatus(
+                                                                        {
                                                                             order.status
-                                                                        )}
+                                                                        }
                                                                     </Badge>
                                                                 </div>
                                                                 <div className="text-sm text-muted-foreground space-y-1">
@@ -376,19 +370,20 @@ export default function ProfilePage() {
                                                                     <p className="flex items-center gap-2">
                                                                         Payment
                                                                         Method:{" "}
-                                                                        <span className="font-medium">
-                                                                            {formatStatus(
+                                                                        <span className="font-medium capitalize">
+                                                                            {
                                                                                 order.paymentMethod
-                                                                            )}
+                                                                            }
                                                                         </span>
                                                                         <Badge
                                                                             variant={getPaymentStatusColor(
                                                                                 order.paymentStatus
                                                                             )}
+                                                                            className="capitalize"
                                                                         >
-                                                                            {formatStatus(
+                                                                            {
                                                                                 order.paymentStatus
-                                                                            )}
+                                                                            }
                                                                         </Badge>
                                                                     </p>
                                                                 </div>

@@ -34,6 +34,7 @@ export default defineSchema({
         .index("by_email", ["email"]),
 
     orders: defineTable({
+        name: v.string(),
         email: v.string(),
         phone: v.string(),
         address: v.string(),
@@ -44,6 +45,7 @@ export default defineSchema({
         deliveryDate: v.optional(v.string()),
         paymentMethod: v.union(v.literal("cod"), v.literal("online")),
         paymentStatus: v.union(v.literal("in-complete"), v.literal("complete")),
+        couponCode: v.optional(v.string()),
         status: v.union(
             v.literal("processing"),
             v.literal("confirmed"),
